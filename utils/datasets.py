@@ -26,6 +26,18 @@ help_url = 'https://github.com/ultralytics/yolov5/wiki/Train-Custom-Data'
 img_formats = ['bmp', 'jpg', 'jpeg', 'png', 'tif', 'tiff', 'dng']  # acceptable image suffixes
 vid_formats = ['mov', 'avi', 'mp4', 'mpg', 'mpeg', 'm4v', 'wmv', 'mkv']  # acceptable video suffixes
 
+#jitter_bounding box
+def jitter_bbox(y,percent,pixel):
+  x = y.copy()
+  if x.size > 0:
+      random_expand =(np.random.rand(x.shape[0],4)*2*percent) - percent
+      x[:,1] = x[:,1] + random_expand[:,0]*(pixel/1622)
+      x[:,2] = x[:,2] + random_expand[:,1]*(pixel/626)
+      x[:,3] = x[:,3] * (1+random_expand[:,2])
+      x[:,4] = x[:,4] * (1+random_expand[:,3])
+      x[:,1:5] = np.clip(x[:,1:5],0,1)
+      return x
+
 # Get orientation exif tag
 for orientation in ExifTags.TAGS.keys():
     if ExifTags.TAGS[orientation] == 'Orientation':
@@ -477,17 +489,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                 self.imgs[i], self.img_hw0[i], self.img_hw[i] = x  # img, hw_original, hw_resized = load_image(self, i)
                 gb += self.imgs[i].nbytes
                 pbar.desc = 'Caching images (%.1fGB)' % (gb / 1E9)
-    def jitter_bbox(y,percent,pixel):
-        x = y.copy()
-        if x.size > 0:
-            random_expand =(np.random.rand(x.shape[0],4)*2*percent) - percent
-            x[:,1] = x[:,1] + random_expand[:,0]*(pixel/1622)
-            x[:,2] = x[:,2] + random_expand[:,1]*(pixel/626)
-            x[:,3] = x[:,3] * (1+random_expand[:,2])
-            x[:,4] = x[:,4] * (1+random_expand[:,3])
-            x[:,1:5] = np.clip(x[:,1:5],0,1)
-            return x
-				
+  			
     def cache_labels(self, path='labels.cache'):
         # Cache dataset labels, check images and read shapes
         x = {}  # dict
@@ -551,8 +553,6 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             # Load labels
             labels = []
             x = self.labels[index]
-			
-		
 
             if (x.size > 0):
               # Normalized xywh to pixel xyxy format
