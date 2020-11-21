@@ -556,7 +556,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
 
             if (x.size > 0):
               # Normalized xywh to pixel xyxy format
-              x = jitter_bbox(x,0.1,4*10)
+              # x = jitter_bbox(x,0.1,4*10)
               labels = x.copy()
               labels[:, 1] = ratio[0] * w * (x[:, 1] - x[:, 3] / 2) + pad[0]  # pad width
               labels[:, 2] = ratio[1] * h * (x[:, 2] - x[:, 4] / 2) + pad[1]  # pad height
